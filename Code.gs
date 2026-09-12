@@ -4,30 +4,33 @@
 // Deploy: Execute as Me · Access: Anyone
 // ============================================================
 // โครงสร้าง Sheet:
-//   LaborLog     : ID, BatchID, Timestamp, EditedAt, Date, Plot, Contractor,
-//                  NumWorkers, Hours, RatePerHourUSD, OTHours, OTMultiplier,
-//                  Supervisor, TotalUSD, EnteredBy, Status (ACTIVE/EDITED)
-//   AppConfig    : Key, Value  → PIN, LINE_TOKEN, LINE_TARGET, OT_MULTIPLIER
+//   LaborLog     : ID, BatchID, Timestamp, EditedAt, Date, Activity, Plot, Contractor,
+//                  NumWorkers, Hours, OTHours, Supervisor, EnteredBy, Status (ACTIVE/EDITED)
+//   AppConfig    : Key, Value  → PIN, LINE_TOKEN, LINE_TARGET
 //   Plots        : รายชื่อแปลง (คอลัมน์ A ตั้งแต่แถว 2) — แก้ได้ตรงในชีต
 //   Contractors  : รายชื่อผู้รับเหมา (คอลัมน์ A ตั้งแต่แถว 2) — แก้ได้ตรงในชีต
+//   Activities   : รายชื่อกิจกรรม (คอลัมน์ A ตั้งแต่แถว 2) — แก้ได้ตรงในชีต
 //
 // หมายเหตุ: Date เก็บเป็น "@" (Plain Text) รูปแบบ "YYYY-MM-DD" เท่านั้น — ห้ามให้
 // Sheet ตีความเป็น Date object เด็ดขาด เพราะ locale ของ Google Sheet (US) จะสลับ
 // วัน/เดือนสำหรับวันที่ ≤ 12 (บั๊กเดียวกับที่เจอใน Rainfall Record มาก่อน)
+//
+// Workflow: กิจกรรม/แปลง/ผู้รับเหมา/จำนวนคนคีย์ตอนเช้าได้โดยยังไม่ต้องรู้ชั่วโมง —
+// saveDay() upsert ตาม (Date) เสมอ ดังนั้นกลับมาแก้ Hours/OTHours ทีหลังในวันเดียวกัน
+// ก็ใช้ endpoint เดิม ไม่ต้องมี endpoint แยกสำหรับ "อัปเดตชั่วโมง"
 // ============================================================
 
 const LOG_SHEET_NAME    = 'LaborLog';
 const CFG_SHEET_NAME    = 'AppConfig';
 const PLOTS_SHEET_NAME  = 'Plots';
 const CONTR_SHEET_NAME  = 'Contractors';
+const ACT_SHEET_NAME    = 'Activities';
 const DEFAULT_PIN       = '1234';
-const DEFAULT_OT_MULT   = 1.5;
 const TZ                = 'Asia/Phnom_Penh';
 
 const LOG_HEADERS = [
-  'ID','BatchID','Timestamp','EditedAt','Date','Plot','Contractor',
-  'NumWorkers','Hours','RatePerHourUSD','OTHours','OTMultiplier',
-  'Supervisor','TotalUSD','EnteredBy','Status','Note'
+  'ID','BatchID','Timestamp','EditedAt','Date','Activity','Plot','Contractor',
+  'NumWorkers','Hours','OTHours','Supervisor','EnteredBy','Status'
 ];
 
 // ── Response helper ──────────────────────────────────────────
@@ -44,7 +47,7 @@ function doGet(e) {
     switch (p.action) {
       case 'getPlots':       return out({ plots: getListValues(PLOTS_SHEET_NAME) });
       case 'getContractors': return out({ contractors: getListValues(CONTR_SHEET_NAME) });
-      case 'getConfig':      return out({ otMultiplier: getOtMultiplier() });
+      case 'getActivities':  return out({ activities: getListValues(ACT_SHEET_NAME) });
       case 'getBatch':       return out(getBatchForDate(p.date));
       case 'getRecentLog':   return out(getRecentLog(parseInt(p.limit || 30)));
       case 'ping':            return out({ ok: true, time: new Date().toISOString() });
@@ -99,7 +102,6 @@ function getCfgSheet() {
     sh.appendRow(['PIN', DEFAULT_PIN]);
     sh.appendRow(['LINE_TOKEN', '']);
     sh.appendRow(['LINE_TARGET', '']);
-    sh.appendRow(['OT_MULTIPLIER', DEFAULT_OT_MULT]);
     sh.getRange(1, 1, 1, 2).setFontWeight('bold').setBackground('#2C4E38').setFontColor('#fff');
     sh.setFrozenRows(1);
   }
@@ -134,9 +136,24 @@ function getContractorsSheet() {
   return sh;
 }
 
+function getActivitiesSheet() {
+  const ss = getSS();
+  let sh = ss.getSheetByName(ACT_SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(ACT_SHEET_NAME);
+    sh.appendRow(['Activity']);
+    sh.getRange(1, 1).setFontWeight('bold').setBackground('#2C4E38').setFontColor('#fff');
+    sh.setFrozenRows(1);
+    // แก้/เพิ่ม/ลบชื่อกิจกรรมได้ตรงนี้เลย ไม่ต้องแก้โค้ด
+    ['วัชพืช (Weeding)','ปลูก (Planting)','เก็บเกี่ยว (Harvesting)','ชลประทาน (Irrigation)',
+     'บำรุงรักษา (Maintenance)','หว่าน (Sowing)','พ่นสาร (Spraying)','อื่น ๆ'].forEach(v => sh.appendRow([v]));
+  }
+  return sh;
+}
+
 // เรียกครั้งเดียวจาก Apps Script editor (Run) หลังวางโค้ดใหม่ เพื่อสร้างชีตทั้งหมดล่วงหน้า
 function initSheets() {
-  getLogSheet(); getCfgSheet(); getPlotsSheet(); getContractorsSheet();
+  getLogSheet(); getCfgSheet(); getPlotsSheet(); getContractorsSheet(); getActivitiesSheet();
   return 'ok';
 }
 
@@ -169,11 +186,6 @@ function setCfgValue(key, value) {
   sh.appendRow([key, value]);
 }
 
-function getOtMultiplier() {
-  const v = parseFloat(getCfgValue('OT_MULTIPLIER'));
-  return isNaN(v) ? DEFAULT_OT_MULT : v;
-}
-
 function getStoredPin() {
   const v = getCfgValue('PIN');
   return v || DEFAULT_PIN;
@@ -190,7 +202,7 @@ function changePin(oldPin, newPin) {
 
 function saveConfig(key, value, pin) {
   if (!verifyPin(pin)) return { error: 'PIN ไม่ถูกต้อง' };
-  const allowed = ['LINE_TOKEN', 'LINE_TARGET', 'OT_MULTIPLIER'];
+  const allowed = ['LINE_TOKEN', 'LINE_TARGET'];
   if (allowed.indexOf(key) === -1) return { error: 'ไม่อนุญาตให้แก้ค่านี้' };
   setCfgValue(key, value);
   return { success: true };
@@ -198,13 +210,13 @@ function saveConfig(key, value, pin) {
 
 // ══════════════════════════════════════════════════════════════
 // CORE: SAVE DAY (สร้างใหม่ครั้งแรก / อัปเดตถ้ามี batch ของวันนั้นอยู่แล้ว)
+// ใช้ endpoint เดียวกันทั้งตอนคีย์เช้า (Hours=0) และตอนกลับมาเติมชั่วโมงเย็น
 // ══════════════════════════════════════════════════════════════
 function saveDay(isoDate, rows, pin, enteredBy) {
   if (!verifyPin(pin)) return { error: 'PIN ไม่ถูกต้อง' };
   if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return { error: 'รูปแบบวันที่ไม่ถูกต้อง (YYYY-MM-DD)' };
   if (!rows || !rows.length) return { error: 'ไม่มีรายการให้บันทึก' };
 
-  const otMult = getOtMultiplier();
   const sh = getLogSheet();
   const who = enteredBy || 'App';
   const now = new Date();
@@ -224,36 +236,27 @@ function saveDay(isoDate, rows, pin, enteredBy) {
 
   // เขียนแถวใหม่ (เวอร์ชันล่าสุด) ทั้งหมดของวันนี้
   const savedRows = [];
-  let grandTotal = 0;
   rows.forEach(r => {
     const numWorkers = parseFloat(r.numWorkers) || 0;
     const hours      = parseFloat(r.hours) || 0;
-    const rate       = parseFloat(r.rate) || 0;
     const otHours    = parseFloat(r.otHours) || 0;
-    const total      = +(numWorkers * (hours * rate + otHours * rate * otMult)).toFixed(2);
-    grandTotal += total;
 
     const id = Date.now() + '_' + Math.floor(Math.random() * 10000);
     sh.appendRow([
       id, batchId, now.toISOString(), '', isoDate,
-      r.plot || '', r.contractor || '',
-      numWorkers, hours, rate, otHours, otMult,
-      r.supervisor || '', total, who, 'ACTIVE', r.note || ''
+      r.activity || '', r.plot || '', r.contractor || '',
+      numWorkers, hours, otHours, r.supervisor || '', who, 'ACTIVE'
     ]);
 
     savedRows.push({
-      id, plot: r.plot || '', contractor: r.contractor || '',
-      numWorkers, hours, rate, otHours, otMultiplier: otMult,
-      supervisor: r.supervisor || '', total, note: r.note || ''
+      id, activity: r.activity || '', plot: r.plot || '', contractor: r.contractor || '',
+      numWorkers, hours, otHours, supervisor: r.supervisor || ''
     });
   });
 
-  sendLineSummary(isoDate, savedRows, grandTotal, isUpdate ? 'UPDATE' : 'NEW');
+  sendLineSummary(isoDate, savedRows, isUpdate ? 'UPDATE' : 'NEW');
 
-  return {
-    success: true, batchId, isUpdate,
-    rows: savedRows, grandTotal: +grandTotal.toFixed(2)
-  };
+  return { success: true, batchId, isUpdate, rows: savedRows };
 }
 
 // หา batch ที่ยัง ACTIVE อยู่ของวันที่ที่กำหนด (คืน batchId + row index ทั้งหมดของ batch นั้น)
@@ -302,12 +305,9 @@ function rowToObj(r) {
   const o = {};
   LOG_HEADERS.forEach((h, i) => { o[h] = r[i]; });
   return {
-    id: String(o.ID), plot: o.Plot, contractor: o.Contractor,
+    id: String(o.ID), activity: o.Activity, plot: o.Plot, contractor: o.Contractor,
     numWorkers: parseFloat(o.NumWorkers) || 0, hours: parseFloat(o.Hours) || 0,
-    rate: parseFloat(o.RatePerHourUSD) || 0, otHours: parseFloat(o.OTHours) || 0,
-    otMultiplier: parseFloat(o.OTMultiplier) || DEFAULT_OT_MULT,
-    supervisor: o.Supervisor, total: parseFloat(o.TotalUSD) || 0,
-    note: o.Note || ''
+    otHours: parseFloat(o.OTHours) || 0, supervisor: o.Supervisor
   };
 }
 
@@ -342,15 +342,20 @@ function getRecentLog(limit) {
   data.forEach(r => {
     const o = rowFullToObj(r);
     if (o.Status !== 'ACTIVE') return;
-    if (!byDate[o.Date]) byDate[o.Date] = { date: o.Date, rows: [], total: 0 };
+    if (!byDate[o.Date]) byDate[o.Date] = { date: o.Date, rows: [], totalHours: 0, totalWorkers: 0, pending: 0 };
     byDate[o.Date].rows.push(o);
-    byDate[o.Date].total += parseFloat(o.TotalUSD) || 0;
+    byDate[o.Date].totalHours += parseFloat(o.Hours) || 0;
+    byDate[o.Date].totalWorkers += parseFloat(o.NumWorkers) || 0;
+    if ((parseFloat(o.Hours) || 0) <= 0) byDate[o.Date].pending++;
   });
 
   const days = Object.values(byDate)
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, limit || 30)
-    .map(d => ({ date: d.date, total: +d.total.toFixed(2), count: d.rows.length }));
+    .map(d => ({
+      date: d.date, count: d.rows.length,
+      totalHours: +d.totalHours.toFixed(1), totalWorkers: d.totalWorkers, pending: d.pending
+    }));
 
   return { records: days, updatedAt: new Date().toISOString() };
 }
@@ -364,7 +369,7 @@ function rowFullToObj(r) {
 // ══════════════════════════════════════════════════════════════
 // LINE MESSAGING API
 // ══════════════════════════════════════════════════════════════
-function sendLineSummary(isoDate, rows, grandTotal, mode) {
+function sendLineSummary(isoDate, rows, mode) {
   const token  = getCfgValue('LINE_TOKEN');
   const target = getCfgValue('LINE_TARGET');
   if (!token || !target) return;
@@ -374,18 +379,18 @@ function sendLineSummary(isoDate, rows, grandTotal, mode) {
   const headEmoji = mode === 'UPDATE' ? '🔄 ปรับปรุงข้อมูลคนงาน' : '🆕 รายงานคนงานรายวัน';
 
   let lines = '';
-  let totalWorkers = 0;
+  let totalWorkers = 0, totalHours = 0, totalOt = 0;
   rows.forEach(r => {
     totalWorkers += r.numWorkers;
-    const otPart = r.otHours > 0 ? ` (+OT ${r.otHours}ชม.)` : '';
-    const notePart = r.note ? `\n   📝 ${r.note}` : '';
-    lines += `📍 ${r.plot} — ${r.contractor}\n` +
-             `   คน ${r.numWorkers} | ${r.hours}ชม.${otPart} | คุม: ${r.supervisor}\n` +
-             `   ค่าจ้าง $${r.total.toFixed(2)}${notePart}\n`;
+    totalHours += r.hours;
+    totalOt += r.otHours;
+    const hoursPart = r.hours > 0 ? `${r.hours}ชม.${r.otHours > 0 ? ` (+OT ${r.otHours}ชม.)` : ''}` : '⏳ รอกรอกชั่วโมง';
+    lines += `📍 ${r.plot} — ${r.activity} — ${r.contractor}\n` +
+             `   คน ${r.numWorkers} | ${hoursPart} | คุม: ${r.supervisor || '-'}\n`;
   });
 
   const msg = `${headEmoji}\n📅 ${dateLabel}\n\n${lines}\n` +
-              `👥 รวมคนงาน: ${totalWorkers} คน\n💰 ยอดรวม: $${grandTotal.toFixed(2)}`;
+              `👥 รวมคนงาน: ${totalWorkers} คน\n⏱ รวมชั่วโมง: ${totalHours} ชม. (OT ${totalOt})`;
 
   try {
     UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', {

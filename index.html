@@ -69,11 +69,23 @@
   .btn-danger{background:none;color:var(--red);border:none;font-size:16px;padding:2px 6px}
   .btn:active{opacity:.7}
 
-  table{width:100%;border-collapse:collapse;font-size:11.5px}
-  th{text-align:left;color:var(--muted);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--border)}
-  td{padding:7px 4px;border-bottom:1px solid var(--surf2);font-family:var(--mono)}
-  tfoot td{font-weight:700;color:var(--primary)}
   .empty-hint{font-size:12px;color:var(--muted2);text-align:center;padding:14px 0}
+
+  .rows{display:flex;flex-direction:column;gap:8px}
+  .row-item{background:var(--surf2);border-radius:10px;padding:10px 11px;border:1px solid var(--border)}
+  .row-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+  .row-title{font-size:13px;font-weight:700;color:var(--pdark)}
+  .row-sub{font-size:11px;color:var(--muted);margin-top:1px}
+  .row-remove{background:none;border:none;color:var(--red);font-size:15px;cursor:pointer;padding:0 2px;line-height:1}
+  .row-bottom{display:flex;align-items:flex-end;gap:8px}
+  .hrs-field{flex:1}
+  .hrs-field label{font-size:9.5px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px}
+  .hrs-field input{padding:7px 9px;font-size:13px}
+  .status-pill{font-size:10px;font-weight:700;padding:5px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.2px}
+  .status-pending{background:#F3E9D8;color:var(--amber)}
+  .status-done{background:var(--plight);color:var(--primary)}
+  .totals{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding-top:10px;margin-top:8px;border-top:1px dashed var(--border)}
+  .totals b{color:var(--pdark);font-family:var(--mono)}
 
   .day-row{display:flex;justify-content:space-between;align-items:center;padding:11px 4px;border-bottom:1px solid var(--surf2);cursor:pointer}
   .day-row:active{background:var(--plight)}
@@ -142,58 +154,42 @@
       </div>
 
       <div class="card">
-        <div class="card-title">เพิ่มรายการ (แปลง × ผู้รับเหมา)</div>
+        <div class="card-title">เพิ่มกิจกรรมเช้า (ไม่ต้องรู้ชั่วโมงตอนนี้)</div>
         <div class="grid-2" style="margin-bottom:10px">
+          <div>
+            <label class="field-label">กิจกรรม</label>
+            <select id="fActivity"><option value="">-- เลือกกิจกรรม --</option></select>
+          </div>
           <div>
             <label class="field-label">แปลง (Plot)</label>
             <select id="fPlot"><option value="">-- เลือกแปลง --</option></select>
           </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:10px">
           <div>
             <label class="field-label">ผู้รับเหมา</label>
             <select id="fContractor"><option value="">-- เลือกผู้รับเหมา --</option></select>
           </div>
-        </div>
-        <div class="grid-3" style="margin-bottom:10px">
           <div>
             <label class="field-label">จำนวนคน</label>
             <input type="number" id="fWorkers" min="0" step="1" placeholder="0">
           </div>
-          <div>
-            <label class="field-label">ชม. ทำงาน</label>
-            <input type="number" id="fHours" min="0" step="0.5" placeholder="0">
-          </div>
-          <div>
-            <label class="field-label">ชม. OT</label>
-            <input type="number" id="fOt" min="0" step="0.5" placeholder="0" value="0">
-          </div>
-        </div>
-        <div class="grid-2" style="margin-bottom:10px">
-          <div>
-            <label class="field-label">ค่าจ้าง/ชม. (USD)</label>
-            <input type="number" id="fRate" min="0" step="0.01" placeholder="0.00">
-          </div>
-          <div>
-            <label class="field-label">ผู้ควบคุม</label>
-            <input type="text" id="fSupervisor" placeholder="ชื่อผู้ควบคุม">
-          </div>
         </div>
         <div style="margin-bottom:10px">
-          <label class="field-label">หมายเหตุ</label>
-          <input type="text" id="fNote" placeholder="บันทึกเพิ่มเติม (ถ้ามี)">
+          <label class="field-label">ผู้ควบคุม</label>
+          <input type="text" id="fSupervisor" placeholder="ชื่อผู้ควบคุม">
         </div>
-        <button class="btn btn-outline" onclick="addRow()">+ เพิ่มรายการ</button>
+        <button class="btn btn-outline" onclick="addRow()">+ เพิ่มกิจกรรม</button>
       </div>
 
       <div class="card">
-        <div class="card-title">รายการของวันนี้</div>
-        <table id="rowsTable">
-          <thead><tr>
-            <th>แปลง / ผู้รับเหมา</th><th>คน</th><th>ชม.</th><th>OT</th><th>รวม $</th><th></th>
-          </tr></thead>
-          <tbody id="rowsBody"></tbody>
-          <tfoot><tr><td colspan="4">รวมทั้งหมด</td><td id="grandTotal">$0.00</td><td></td></tr></tfoot>
-        </table>
-        <div id="emptyHint" class="empty-hint">ยังไม่มีรายการ — เพิ่มรายการด้านบน</div>
+        <div class="card-title">รายการของวันนี้ — แตะช่องชั่วโมงเพื่อกรอก/แก้ทีหลังได้</div>
+        <div class="rows" id="rowsList"></div>
+        <div id="emptyHint" class="empty-hint">ยังไม่มีรายการ — เพิ่มกิจกรรมด้านบน</div>
+        <div class="totals">
+          <span>รวม <b id="totWorkers">0</b> คน</span>
+          <span>ชั่วโมง <b id="totHours">0</b> (OT <b id="totOt">0</b>)</span>
+        </div>
       </div>
 
       <button class="btn btn-primary" id="submitBtn" onclick="promptSubmit()">📤 ส่งเข้า LINE</button>
@@ -306,13 +302,14 @@ function switchTab(name) {
 // ══════════════════════════════════════════════════════════════
 async function loadDropdowns() {
   try {
-    const [plotsRes, contrRes] = await Promise.all([
-      apiGet('getPlots'), apiGet('getContractors')
+    const [plotsRes, contrRes, actRes] = await Promise.all([
+      apiGet('getPlots'), apiGet('getContractors'), apiGet('getActivities')
     ]);
     fillSelect('fPlot', plotsRes.plots || [], '-- เลือกแปลง --');
     fillSelect('fContractor', contrRes.contractors || [], '-- เลือกผู้รับเหมา --');
+    fillSelect('fActivity', actRes.activities || [], '-- เลือกกิจกรรม --');
   } catch (e) {
-    showToast('โหลดรายชื่อแปลง/ผู้รับเหมาไม่สำเร็จ (ออฟไลน์?)');
+    showToast('โหลดรายชื่อแปลง/ผู้รับเหมา/กิจกรรมไม่สำเร็จ (ออฟไลน์?)');
   }
 }
 
@@ -360,28 +357,22 @@ function updateModeBanner() {
 // ADD ROW
 // ══════════════════════════════════════════════════════════════
 function addRow() {
+  const activity = document.getElementById('fActivity').value;
   const plot = document.getElementById('fPlot').value;
   const contractor = document.getElementById('fContractor').value;
   const numWorkers = parseFloat(document.getElementById('fWorkers').value) || 0;
-  const hours = parseFloat(document.getElementById('fHours').value) || 0;
-  const otHours = parseFloat(document.getElementById('fOt').value) || 0;
-  const rate = parseFloat(document.getElementById('fRate').value) || 0;
   const supervisor = document.getElementById('fSupervisor').value.trim();
-  const note = document.getElementById('fNote').value.trim();
 
+  if (!activity) return showToast('กรุณาเลือกกิจกรรม');
   if (!plot || !contractor) return showToast('กรุณาเลือกแปลงและผู้รับเหมา');
   if (numWorkers <= 0) return showToast('กรุณากรอกจำนวนคนงาน');
-  if (hours <= 0 && otHours <= 0) return showToast('กรุณากรอกชั่วโมงทำงาน');
-  if (rate <= 0) return showToast('กรุณากรอกค่าจ้าง/ชม.');
 
-  const otMult = 1.5;
-  const total = +(numWorkers * (hours * rate + otHours * rate * otMult)).toFixed(2);
-
-  currentRows.push({ plot, contractor, numWorkers, hours, rate, otHours, otMultiplier: otMult, supervisor, note, total });
+  currentRows.push({ activity, plot, contractor, numWorkers, supervisor, hours: 0, otHours: 0 });
   renderRows();
 
-  ['fWorkers','fHours','fRate','fSupervisor','fNote'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('fOt').value = '0';
+  document.getElementById('fWorkers').value = '';
+  document.getElementById('fSupervisor').value = '';
+  document.getElementById('fActivity').value = '';
   document.getElementById('fPlot').value = '';
   document.getElementById('fContractor').value = '';
 }
@@ -391,25 +382,51 @@ function removeRow(idx) {
   renderRows();
 }
 
+function onHoursInput(idx, field, val) {
+  currentRows[idx][field] = parseFloat(val) || 0;
+  const pending = currentRows[idx].hours <= 0;
+  const pill = document.getElementById('pill-' + idx);
+  if (pill) {
+    pill.className = 'status-pill ' + (pending ? 'status-pending' : 'status-done');
+    pill.textContent = pending ? 'รอชั่วโมง' : 'บันทึกแล้ว';
+  }
+  updateTotals();
+}
+
+function updateTotals() {
+  document.getElementById('totWorkers').textContent = currentRows.reduce((s, r) => s + r.numWorkers, 0);
+  document.getElementById('totHours').textContent = currentRows.reduce((s, r) => s + r.hours, 0);
+  document.getElementById('totOt').textContent = currentRows.reduce((s, r) => s + r.otHours, 0);
+}
+
 function renderRows() {
-  const body = document.getElementById('rowsBody');
+  const list = document.getElementById('rowsList');
   const hint = document.getElementById('emptyHint');
-  body.innerHTML = '';
-  let grand = 0;
-  currentRows.forEach((r, idx) => {
-    grand += r.total;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${escapeHtml(r.plot)}<br><span style="color:var(--muted);font-size:10px">${escapeHtml(r.contractor)}</span>${r.note ? `<br><span style="color:var(--muted);font-size:10px">📝 ${escapeHtml(r.note)}</span>` : ''}</td>
-      <td>${r.numWorkers}</td>
-      <td>${r.hours}</td>
-      <td>${r.otHours}</td>
-      <td>$${r.total.toFixed(2)}</td>
-      <td><button class="btn-danger" onclick="removeRow(${idx})">✕</button></td>`;
-    body.appendChild(tr);
-  });
-  document.getElementById('grandTotal').textContent = '$' + grand.toFixed(2);
+  list.innerHTML = currentRows.map((r, idx) => {
+    const pending = r.hours <= 0;
+    return `<div class="row-item">
+      <div class="row-top">
+        <div>
+          <div class="row-title">${escapeHtml(r.plot)} — ${escapeHtml(r.activity)}</div>
+          <div class="row-sub">${escapeHtml(r.contractor)} · ${r.numWorkers} คน${r.supervisor ? ' · คุม: ' + escapeHtml(r.supervisor) : ''}</div>
+        </div>
+        <button class="row-remove" onclick="removeRow(${idx})">✕</button>
+      </div>
+      <div class="row-bottom">
+        <div class="hrs-field">
+          <label>ชม. ทำงาน</label>
+          <input type="number" min="0" step="0.5" value="${r.hours || ''}" placeholder="รอกรอก" oninput="onHoursInput(${idx},'hours',this.value)">
+        </div>
+        <div class="hrs-field">
+          <label>OT</label>
+          <input type="number" min="0" step="0.5" value="${r.otHours || ''}" placeholder="0" oninput="onHoursInput(${idx},'otHours',this.value)">
+        </div>
+        <span class="status-pill ${pending ? 'status-pending' : 'status-done'}" id="pill-${idx}">${pending ? 'รอชั่วโมง' : 'บันทึกแล้ว'}</span>
+      </div>
+    </div>`;
+  }).join('');
   hint.style.display = currentRows.length ? 'none' : 'block';
+  updateTotals();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -476,8 +493,8 @@ async function loadHistory() {
     if (!days.length) { list.innerHTML = '<div class="empty-hint">ยังไม่มีข้อมูล</div>'; return; }
     list.innerHTML = days.map(d => `
       <div class="day-row" onclick="editDay('${d.date}')">
-        <div><div class="day-date">${d.date}</div><div class="day-meta">${d.count} รายการ</div></div>
-        <div class="day-total">$${d.total.toFixed(2)}</div>
+        <div><div class="day-date">${d.date}</div><div class="day-meta">${d.count} รายการ · ${d.totalWorkers} คน${d.pending > 0 ? ` · <span style="color:var(--amber)">รอชั่วโมง ${d.pending}</span>` : ''}</div></div>
+        <div class="day-total">${d.totalHours} ชม.</div>
       </div>`).join('');
   } catch (e) {
     list.innerHTML = '<div class="empty-hint">โหลดไม่สำเร็จ (ออฟไลน์?)</div>';
