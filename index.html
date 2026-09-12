@@ -171,6 +171,10 @@
             <input type="text" id="fSupervisor" placeholder="ชื่อผู้ควบคุม">
           </div>
         </div>
+        <div style="margin-bottom:10px">
+          <label class="field-label">หมายเหตุ</label>
+          <input type="text" id="fNote" placeholder="บันทึกเพิ่มเติม (ถ้ามี)">
+        </div>
         <button class="btn btn-outline" onclick="addRow()">+ เพิ่มรายการ</button>
       </div>
 
@@ -354,6 +358,7 @@ function addRow() {
   const otHours = parseFloat(document.getElementById('fOt').value) || 0;
   const rate = parseFloat(document.getElementById('fRate').value) || 0;
   const supervisor = document.getElementById('fSupervisor').value.trim();
+  const note = document.getElementById('fNote').value.trim();
 
   if (!plot || !contractor) return showToast('กรุณาเลือกแปลงและผู้รับเหมา');
   if (numWorkers <= 0) return showToast('กรุณากรอกจำนวนคนงาน');
@@ -363,10 +368,10 @@ function addRow() {
   const otMult = 1.5;
   const total = +(numWorkers * (hours * rate + otHours * rate * otMult)).toFixed(2);
 
-  currentRows.push({ plot, contractor, numWorkers, hours, rate, otHours, otMultiplier: otMult, supervisor, total });
+  currentRows.push({ plot, contractor, numWorkers, hours, rate, otHours, otMultiplier: otMult, supervisor, note, total });
   renderRows();
 
-  ['fWorkers','fHours','fRate','fSupervisor'].forEach(id => document.getElementById(id).value = '');
+  ['fWorkers','fHours','fRate','fSupervisor','fNote'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('fOt').value = '0';
   document.getElementById('fPlot').value = '';
   document.getElementById('fContractor').value = '';
@@ -386,7 +391,7 @@ function renderRows() {
     grand += r.total;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${escapeHtml(r.plot)}<br><span style="color:var(--muted);font-size:10px">${escapeHtml(r.contractor)}</span></td>
+      <td>${escapeHtml(r.plot)}<br><span style="color:var(--muted);font-size:10px">${escapeHtml(r.contractor)}</span>${r.note ? `<br><span style="color:var(--muted);font-size:10px">📝 ${escapeHtml(r.note)}</span>` : ''}</td>
       <td>${r.numWorkers}</td>
       <td>${r.hours}</td>
       <td>${r.otHours}</td>

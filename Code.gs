@@ -27,7 +27,7 @@ const TZ                = 'Asia/Phnom_Penh';
 const LOG_HEADERS = [
   'ID','BatchID','Timestamp','EditedAt','Date','Plot','Contractor',
   'NumWorkers','Hours','RatePerHourUSD','OTHours','OTMultiplier',
-  'Supervisor','TotalUSD','EnteredBy','Status'
+  'Supervisor','TotalUSD','EnteredBy','Status','Note'
 ];
 
 // ── Response helper ──────────────────────────────────────────
@@ -129,7 +129,7 @@ function getContractorsSheet() {
     sh.getRange(1, 1).setFontWeight('bold').setBackground('#2C4E38').setFontColor('#fff');
     sh.setFrozenRows(1);
     // แก้/เพิ่ม/ลบชื่อผู้รับเหมาได้ตรงนี้เลย ไม่ต้องแก้โค้ด
-    ['Chhan Chhoeuk','Theang Thim'].forEach(v => sh.appendRow([v]));
+    ['Chhan Chhoeuk','Theang Thim','Da'].forEach(v => sh.appendRow([v]));
   }
   return sh;
 }
@@ -238,13 +238,13 @@ function saveDay(isoDate, rows, pin, enteredBy) {
       id, batchId, now.toISOString(), '', isoDate,
       r.plot || '', r.contractor || '',
       numWorkers, hours, rate, otHours, otMult,
-      r.supervisor || '', total, who, 'ACTIVE'
+      r.supervisor || '', total, who, 'ACTIVE', r.note || ''
     ]);
 
     savedRows.push({
       id, plot: r.plot || '', contractor: r.contractor || '',
       numWorkers, hours, rate, otHours, otMultiplier: otMult,
-      supervisor: r.supervisor || '', total
+      supervisor: r.supervisor || '', total, note: r.note || ''
     });
   });
 
@@ -306,7 +306,8 @@ function rowToObj(r) {
     numWorkers: parseFloat(o.NumWorkers) || 0, hours: parseFloat(o.Hours) || 0,
     rate: parseFloat(o.RatePerHourUSD) || 0, otHours: parseFloat(o.OTHours) || 0,
     otMultiplier: parseFloat(o.OTMultiplier) || DEFAULT_OT_MULT,
-    supervisor: o.Supervisor, total: parseFloat(o.TotalUSD) || 0
+    supervisor: o.Supervisor, total: parseFloat(o.TotalUSD) || 0,
+    note: o.Note || ''
   };
 }
 
@@ -377,9 +378,10 @@ function sendLineSummary(isoDate, rows, grandTotal, mode) {
   rows.forEach(r => {
     totalWorkers += r.numWorkers;
     const otPart = r.otHours > 0 ? ` (+OT ${r.otHours}ชม.)` : '';
+    const notePart = r.note ? `\n   📝 ${r.note}` : '';
     lines += `📍 ${r.plot} — ${r.contractor}\n` +
              `   คน ${r.numWorkers} | ${r.hours}ชม.${otPart} | คุม: ${r.supervisor}\n` +
-             `   ค่าจ้าง $${r.total.toFixed(2)}\n`;
+             `   ค่าจ้าง $${r.total.toFixed(2)}${notePart}\n`;
   });
 
   const msg = `${headEmoji}\n📅 ${dateLabel}\n\n${lines}\n` +
