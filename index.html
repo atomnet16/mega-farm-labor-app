@@ -6,6 +6,12 @@
 <title>Labor Daily Report</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2C4E38">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Labor Report">
 <style>
   :root{
     --bg:#EBE5D8;--surface:#F6F2E8;--surf2:#E2DDD0;--border:#C6C0B2;--bord2:#B0A898;
@@ -231,6 +237,9 @@ const PENDING_KEY = 'labor_pending';
 // BOOT
 // ══════════════════════════════════════════════════════════════
 window.addEventListener('load', boot);
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 function boot() {
   if (!SCRIPT_URL) {
     document.getElementById('setupScreen').style.display = 'block';
