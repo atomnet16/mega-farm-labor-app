@@ -1,0 +1,19 @@
+{
+  "name": "Labor Daily Report · Mega Farm",
+  "short_name": "Labor Report",
+  "description": "คีย์ข้อมูลคนงานรายวัน + รายงานเข้า LINE — Mega Farm Cambodia",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EBE5D8",
+  "theme_color": "#2C4E38",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Labor Daily Report</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2C4E38">
+<style>
+  :root{
+    --bg:#EBE5D8;--surface:#F6F2E8;--surf2:#E2DDD0;--border:#C6C0B2;--bord2:#B0A898;
+    --text:#181C18;--muted:#596858;--muted2:#B0A898;--primary:#2C4E38;
+    --plight:#D8E8DC;--pdark:#181C18;--green:#2C4E38;--amber:#7A5E38;--red:#C04040;
+    --mono:-apple-system,'Helvetica Neue',monospace;--sans:-apple-system,'Helvetica Neue',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding-bottom:24px}
+  input,select,textarea,button{font-family:var(--sans);outline:none}
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+  #header{background:var(--primary);padding:14px 16px 0;position:sticky;top:0;z-index:100}
+  .header-top{display:flex;justify-content:space-between;align-items:center;margin:0 auto 12px;max-width:520px}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-icon{width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .logo-title{font-size:15px;font-weight:700;color:#fff}
+  .logo-sub{font-size:9px;color:rgba(255,255,255,.6);font-family:var(--mono);letter-spacing:1.5px}
+  .clock-wrap{text-align:right;display:flex;align-items:center;gap:10px}
+  .clock-time{font-family:var(--mono);font-size:16px;font-weight:600;color:#fff;letter-spacing:1px;line-height:1}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);display:inline-block;margin-right:4px}
+  .sync-dot.ok{background:#7AB88A}
+  .sync-dot.error{background:#E08080}
+  .gear-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;width:30px;height:30px;font-size:14px;cursor:pointer}
+  .pending-badge{font-size:10px;background:rgba(255,255,255,.2);color:#fff;border-radius:5px;padding:2px 6px;font-weight:600;margin-left:6px}
+
+  .tabs{display:flex;max-width:520px;margin:0 auto}
+  .tab-btn{flex:1;border:none;background:none;cursor:pointer;padding:12px 0;font-size:12px;color:rgba(255,255,255,.5);border-bottom:2px solid transparent;font-family:var(--sans);font-weight:600}
+  .tab-btn.active{color:#fff;border-bottom-color:#fff}
+
+  .content{max-width:520px;margin:0 auto;padding:14px}
+  .tab-panel{display:none;flex-direction:column;gap:10px}
+  .tab-panel.active{display:flex}
+
+  .card{background:var(--surface);border-radius:14px;padding:14px;border:1px solid var(--border)}
+  .card-title{font-size:11px;font-weight:700;color:var(--primary);margin-bottom:10px;letter-spacing:.3px;text-transform:uppercase}
+  .banner{background:var(--plight);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--primary);font-weight:600}
+
+  .field-label{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600;display:block}
+  input[type=date],input[type=number],input[type=text],input[type=password]{
+    width:100%;background:var(--surf2);color:var(--pdark);border:1.5px solid var(--border);border-radius:9px;
+    padding:10px 12px;font-size:14px;font-family:var(--mono);font-weight:600}
+  input:focus{border-color:var(--primary)}
+  select{width:100%;background:var(--surf2);color:var(--pdark);border:1.5px solid var(--border);border-radius:10px;
+    padding:11px 34px 11px 12px;font-size:14px;font-family:var(--mono);font-weight:600;appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232C4E38' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+  .btn{border:none;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:var(--sans)}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-outline{background:var(--surf2);color:var(--primary);border:1.5px solid var(--primary)}
+  .btn-danger{background:none;color:var(--red);border:none;font-size:16px;padding:2px 6px}
+  .btn:active{opacity:.7}
+
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  th{text-align:left;color:var(--muted);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--border)}
+  td{padding:7px 4px;border-bottom:1px solid var(--surf2);font-family:var(--mono)}
+  tfoot td{font-weight:700;color:var(--primary)}
+  .empty-hint{font-size:12px;color:var(--muted2);text-align:center;padding:14px 0}
+
+  .day-row{display:flex;justify-content:space-between;align-items:center;padding:11px 4px;border-bottom:1px solid var(--surf2);cursor:pointer}
+  .day-row:active{background:var(--plight)}
+  .day-date{font-family:var(--mono);font-weight:700;color:var(--pdark);font-size:13px}
+  .day-meta{font-size:11px;color:var(--muted)}
+  .day-total{font-family:var(--mono);font-weight:700;color:var(--primary)}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+  .modal-overlay.show{display:flex}
+  .modal-box{background:var(--surface);border-radius:14px;padding:18px;width:100%;max-width:320px}
+  .modal-title{font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--pdark);color:#fff;
+    padding:10px 18px;border-radius:20px;font-size:12px;z-index:300;opacity:0;transition:opacity .25s;max-width:90%;text-align:center}
+  .toast.show{opacity:1}
+
+  .setup-box{max-width:520px;margin:40px auto;padding:0 16px}
+</style>
+</head>
+<body>
+
+<div id="setupScreen" class="setup-box" style="display:none">
+  <div class="card">
+    <div class="card-title">ตั้งค่าครั้งแรก</div>
+    <label class="field-label">Google Apps Script Web App URL (/exec)</label>
+    <input type="text" id="setupUrl" placeholder="https://script.google.com/macros/s/xxx/exec" style="margin-bottom:10px">
+    <button class="btn btn-primary" onclick="saveSetupUrl()">บันทึกและเริ่มใช้งาน</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div id="header">
+    <div class="header-top">
+      <div class="logo">
+        <div class="logo-icon">👷</div>
+        <div>
+          <div class="logo-title">Labor Daily Report</div>
+          <div class="logo-sub">MEGA FARM CAMBODIA</div>
+        </div>
+      </div>
+      <div class="clock-wrap">
+        <div style="text-align:right">
+          <div class="clock-time" id="clockTime">--:--</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.6)">
+            <span class="sync-dot" id="syncDot"></span><span id="syncLabel">-</span>
+            <span class="pending-badge" id="pendingBadge" style="display:none"></span>
+          </div>
+        </div>
+        <button class="gear-btn" onclick="openSettings()">⚙</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="entry" onclick="switchTab('entry')">คีย์ข้อมูล</button>
+      <button class="tab-btn" data-tab="history" onclick="switchTab('history')">ประวัติ</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="tab-panel active" id="tab-entry">
+      <div id="modeBanner" class="banner" style="display:none"></div>
+
+      <div class="card">
+        <div class="card-title">วันที่ทำงาน</div>
+        <input type="date" id="fDate" onchange="onDateChange()">
+      </div>
+
+      <div class="card">
+        <div class="card-title">เพิ่มรายการ (แปลง × ผู้รับเหมา)</div>
+        <div class="grid-2" style="margin-bottom:10px">
+          <div>
+            <label class="field-label">แปลง (Plot)</label>
+            <select id="fPlot"><option value="">-- เลือกแปลง --</option></select>
+          </div>
+          <div>
+            <label class="field-label">ผู้รับเหมา</label>
+            <select id="fContractor"><option value="">-- เลือกผู้รับเหมา --</option></select>
+          </div>
+        </div>
+        <div class="grid-3" style="margin-bottom:10px">
+          <div>
+            <label class="field-label">จำนวนคน</label>
+            <input type="number" id="fWorkers" min="0" step="1" placeholder="0">
+          </div>
+          <div>
+            <label class="field-label">ชม. ทำงาน</label>
+            <input type="number" id="fHours" min="0" step="0.5" placeholder="0">
+          </div>
+          <div>
+            <label class="field-label">ชม. OT</label>
+            <input type="number" id="fOt" min="0" step="0.5" placeholder="0" value="0">
+          </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:10px">
+          <div>
+            <label class="field-label">ค่าจ้าง/ชม. (USD)</label>
+            <input type="number" id="fRate" min="0" step="0.01" placeholder="0.00">
+          </div>
+          <div>
+            <label class="field-label">ผู้ควบคุม</label>
+            <input type="text" id="fSupervisor" placeholder="ชื่อผู้ควบคุม">
+          </div>
+        </div>
+        <button class="btn btn-outline" onclick="addRow()">+ เพิ่มรายการ</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">รายการของวันนี้</div>
+        <table id="rowsTable">
+          <thead><tr>
+            <th>แปลง / ผู้รับเหมา</th><th>คน</th><th>ชม.</th><th>OT</th><th>รวม $</th><th></th>
+          </tr></thead>
+          <tbody id="rowsBody"></tbody>
+          <tfoot><tr><td colspan="4">รวมทั้งหมด</td><td id="grandTotal">$0.00</td><td></td></tr></tfoot>
+        </table>
+        <div id="emptyHint" class="empty-hint">ยังไม่มีรายการ — เพิ่มรายการด้านบน</div>
+      </div>
+
+      <button class="btn btn-primary" id="submitBtn" onclick="promptSubmit()">📤 ส่งเข้า LINE</button>
+    </div>
+
+    <div class="tab-panel" id="tab-history">
+      <div class="card">
+        <div class="card-title">ประวัติรายวัน (แตะเพื่อแก้ไข)</div>
+        <div id="historyList"><div class="empty-hint">กำลังโหลด...</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="pinModal">
+  <div class="modal-box">
+    <div class="modal-title" id="pinModalTitle">กรุณากรอก PIN</div>
+    <input type="password" id="pinInput" inputmode="numeric" maxlength="4" placeholder="••••" style="margin-bottom:12px;text-align:center;font-size:20px;letter-spacing:6px">
+    <div class="grid-2">
+      <button class="btn btn-outline" onclick="closePinModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="confirmPin()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyblJjuRw-rzYEeMFVMVQTuNRYhU217CbIa1m330irfeWkiXGWZxk6Q7OMp_SR2AHJ6/exec';
+let SCRIPT_URL = localStorage.getItem('labor_webapp_url') || DEFAULT_SCRIPT_URL;
+let currentRows = [];      // rows staged for the selected date, before/after save
+let currentMode = 'NEW';   // NEW | UPDATE (มี batch อยู่แล้วสำหรับวันนี้)
+let pinCallback = null;
+const PENDING_KEY = 'labor_pending';
+
+// ══════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('load', boot);
+function boot() {
+  if (!SCRIPT_URL) {
+    document.getElementById('setupScreen').style.display = 'block';
+    return;
+  }
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('fDate').value = todayIso();
+  tickClock(); setInterval(tickClock, 1000);
+  updateSyncBadge();
+  window.addEventListener('online', () => { updateSyncBadge(); flushPending(); });
+  window.addEventListener('offline', updateSyncBadge);
+  loadDropdowns();
+  onDateChange();
+  flushPending();
+}
+
+function saveSetupUrl() {
+  const v = document.getElementById('setupUrl').value.trim();
+  if (!v) return;
+  localStorage.setItem('labor_webapp_url', v);
+  location.reload();
+}
+
+function openSettings() {
+  const v = prompt('Google Apps Script Web App URL:', SCRIPT_URL);
+  if (v !== null && v.trim()) {
+    localStorage.setItem('labor_webapp_url', v.trim());
+    location.reload();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// CLOCK / SYNC BADGE
+// ══════════════════════════════════════════════════════════════
+function tickClock() {
+  const now = new Date();
+  document.getElementById('clockTime').textContent =
+    now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function updateSyncBadge() {
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  if (navigator.onLine) { dot.className = 'sync-dot ok'; label.textContent = 'ONLINE'; }
+  else { dot.className = 'sync-dot error'; label.textContent = 'OFFLINE'; }
+  const pending = getPending();
+  const badge = document.getElementById('pendingBadge');
+  if (pending.length) { badge.style.display = 'inline'; badge.textContent = pending.length + ' รอส่ง'; }
+  else { badge.style.display = 'none'; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'history') loadHistory();
+}
+
+// ══════════════════════════════════════════════════════════════
+// DROPDOWNS (Plots / Contractors จาก Sheet)
+// ══════════════════════════════════════════════════════════════
+async function loadDropdowns() {
+  try {
+    const [plotsRes, contrRes] = await Promise.all([
+      apiGet('getPlots'), apiGet('getContractors')
+    ]);
+    fillSelect('fPlot', plotsRes.plots || [], '-- เลือกแปลง --');
+    fillSelect('fContractor', contrRes.contractors || [], '-- เลือกผู้รับเหมา --');
+  } catch (e) {
+    showToast('โหลดรายชื่อแปลง/ผู้รับเหมาไม่สำเร็จ (ออฟไลน์?)');
+  }
+}
+
+function fillSelect(id, values, placeholder) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="">${placeholder}</option>` +
+    values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// DATE CHANGE → โหลด batch เดิมของวันนั้น (ถ้ามี) เพื่อแก้ไข
+// ══════════════════════════════════════════════════════════════
+async function onDateChange() {
+  const date = document.getElementById('fDate').value;
+  if (!date) return;
+  currentRows = [];
+  currentMode = 'NEW';
+  renderRows();
+  updateModeBanner();
+  try {
+    const res = await apiGet('getBatch', { date });
+    if (res.batchId && res.rows && res.rows.length) {
+      currentRows = res.rows;
+      currentMode = 'UPDATE';
+      renderRows();
+      updateModeBanner();
+    }
+  } catch (e) { /* ออฟไลน์ก็ปล่อยให้คีย์ใหม่ได้ตามปกติ */ }
+}
+
+function updateModeBanner() {
+  const banner = document.getElementById('modeBanner');
+  const btn = document.getElementById('submitBtn');
+  if (currentMode === 'UPDATE') {
+    banner.style.display = 'block';
+    banner.textContent = `📝 วันนี้มีข้อมูลอยู่แล้ว (${currentRows.length} รายการ) — แก้ไขแล้วกดส่งเพื่ออัปเดต LINE`;
+    btn.textContent = '🔄 อัปเดตและแจ้งใน LINE';
+  } else {
+    banner.style.display = 'none';
+    btn.textContent = '📤 ส่งเข้า LINE';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADD ROW
+// ══════════════════════════════════════════════════════════════
+function addRow() {
+  const plot = document.getElementById('fPlot').value;
+  const contractor = document.getElementById('fContractor').value;
+  const numWorkers = parseFloat(document.getElementById('fWorkers').value) || 0;
+  const hours = parseFloat(document.getElementById('fHours').value) || 0;
+  const otHours = parseFloat(document.getElementById('fOt').value) || 0;
+  const rate = parseFloat(document.getElementById('fRate').value) || 0;
+  const supervisor = document.getElementById('fSupervisor').value.trim();
+
+  if (!plot || !contractor) return showToast('กรุณาเลือกแปลงและผู้รับเหมา');
+  if (numWorkers <= 0) return showToast('กรุณากรอกจำนวนคนงาน');
+  if (hours <= 0 && otHours <= 0) return showToast('กรุณากรอกชั่วโมงทำงาน');
+  if (rate <= 0) return showToast('กรุณากรอกค่าจ้าง/ชม.');
+
+  const otMult = 1.5;
+  const total = +(numWorkers * (hours * rate + otHours * rate * otMult)).toFixed(2);
+
+  currentRows.push({ plot, contractor, numWorkers, hours, rate, otHours, otMultiplier: otMult, supervisor, total });
+  renderRows();
+
+  ['fWorkers','fHours','fRate','fSupervisor'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fOt').value = '0';
+  document.getElementById('fPlot').value = '';
+  document.getElementById('fContractor').value = '';
+}
+
+function removeRow(idx) {
+  currentRows.splice(idx, 1);
+  renderRows();
+}
+
+function renderRows() {
+  const body = document.getElementById('rowsBody');
+  const hint = document.getElementById('emptyHint');
+  body.innerHTML = '';
+  let grand = 0;
+  currentRows.forEach((r, idx) => {
+    grand += r.total;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(r.plot)}<br><span style="color:var(--muted);font-size:10px">${escapeHtml(r.contractor)}</span></td>
+      <td>${r.numWorkers}</td>
+      <td>${r.hours}</td>
+      <td>${r.otHours}</td>
+      <td>$${r.total.toFixed(2)}</td>
+      <td><button class="btn-danger" onclick="removeRow(${idx})">✕</button></td>`;
+    body.appendChild(tr);
+  });
+  document.getElementById('grandTotal').textContent = '$' + grand.toFixed(2);
+  hint.style.display = currentRows.length ? 'none' : 'block';
+}
+
+// ══════════════════════════════════════════════════════════════
+// SUBMIT (ขอ PIN → saveDay)
+// ══════════════════════════════════════════════════════════════
+function promptSubmit() {
+  if (!currentRows.length) return showToast('ยังไม่มีรายการให้ส่ง');
+  askPin('กรอก PIN เพื่อ' + (currentMode === 'UPDATE' ? 'อัปเดตข้อมูล' : 'ส่งข้อมูล'), submitDay);
+}
+
+async function submitDay(pin) {
+  const date = document.getElementById('fDate').value;
+  const payload = { action: 'saveDay', date, rows: currentRows, pin, enteredBy: 'App' };
+
+  if (!navigator.onLine) return queueAndNotify(payload);
+
+  try {
+    const res = await apiPost(payload);
+    if (res.error) return showToast('❌ ' + res.error);
+    showToast(res.isUpdate ? '✅ อัปเดตและแจ้ง LINE แล้ว' : '✅ ส่งเข้า LINE แล้ว');
+    currentMode = 'UPDATE';
+    updateModeBanner();
+    loadHistory();
+  } catch (e) {
+    queueAndNotify(payload);
+  }
+}
+
+function queueAndNotify(payload) {
+  const pending = getPending();
+  pending.push(payload);
+  setPending(pending);
+  updateSyncBadge();
+  showToast('📵 ออฟไลน์ — บันทึกไว้ในเครื่อง จะส่งอัตโนมัติเมื่อออนไลน์');
+}
+
+async function flushPending() {
+  if (!navigator.onLine) return;
+  let pending = getPending();
+  if (!pending.length) return;
+  const remaining = [];
+  for (const payload of pending) {
+    try {
+      const res = await apiPost(payload);
+      if (res.error) remaining.push(payload); // PIN ผิด/ผิดพลาด ให้ค้างไว้ให้ผู้ใช้เห็น ไม่ทิ้งเงียบ
+    } catch (e) { remaining.push(payload); }
+  }
+  setPending(remaining);
+  updateSyncBadge();
+  if (remaining.length < pending.length) { showToast('✅ ซิงค์ข้อมูลที่ค้างไว้เรียบร้อย'); loadHistory(); }
+}
+
+function getPending() { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); } catch (e) { return []; } }
+function setPending(arr) { localStorage.setItem(PENDING_KEY, JSON.stringify(arr)); }
+
+// ══════════════════════════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════════════════════════
+async function loadHistory() {
+  const list = document.getElementById('historyList');
+  try {
+    const res = await apiGet('getRecentLog', { limit: 30 });
+    const days = res.records || [];
+    if (!days.length) { list.innerHTML = '<div class="empty-hint">ยังไม่มีข้อมูล</div>'; return; }
+    list.innerHTML = days.map(d => `
+      <div class="day-row" onclick="editDay('${d.date}')">
+        <div><div class="day-date">${d.date}</div><div class="day-meta">${d.count} รายการ</div></div>
+        <div class="day-total">$${d.total.toFixed(2)}</div>
+      </div>`).join('');
+  } catch (e) {
+    list.innerHTML = '<div class="empty-hint">โหลดไม่สำเร็จ (ออฟไลน์?)</div>';
+  }
+}
+
+function editDay(date) {
+  document.getElementById('fDate').value = date;
+  switchTab('entry');
+  onDateChange();
+}
+
+// ══════════════════════════════════════════════════════════════
+// PIN MODAL
+// ══════════════════════════════════════════════════════════════
+function askPin(title, cb) {
+  document.getElementById('pinModalTitle').textContent = title;
+  document.getElementById('pinInput').value = '';
+  pinCallback = cb;
+  document.getElementById('pinModal').classList.add('show');
+  setTimeout(() => document.getElementById('pinInput').focus(), 50);
+}
+function closePinModal() { document.getElementById('pinModal').classList.remove('show'); pinCallback = null; }
+function confirmPin() {
+  const pin = document.getElementById('pinInput').value.trim();
+  if (!pin) return;
+  const cb = pinCallback;
+  closePinModal();
+  if (cb) cb(pin);
+}
+
+// ══════════════════════════════════════════════════════════════
+// API HELPERS
+// ══════════════════════════════════════════════════════════════
+function apiGet(action, params) {
+  const q = new URLSearchParams({ action, ...(params || {}) });
+  return fetch(SCRIPT_URL + '?' + q.toString()).then(r => r.json());
+}
+function apiPost(body) {
+  return fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // เลี่ยง CORS preflight กับ GAS
+    body: JSON.stringify(body)
+  }).then(r => r.json());
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+function todayIso() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>
