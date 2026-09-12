@@ -5,102 +5,150 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Labor Daily Report</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2C4E38">
+<meta name="theme-color" content="#05070a">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Labor Report">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
   :root{
-    --bg:#EBE5D8;--surface:#F6F2E8;--surf2:#E2DDD0;--border:#C6C0B2;--bord2:#B0A898;
-    --text:#181C18;--muted:#596858;--muted2:#B0A898;--primary:#2C4E38;
-    --plight:#D8E8DC;--pdark:#181C18;--green:#2C4E38;--amber:#7A5E38;--red:#C04040;
-    --mono:-apple-system,'Helvetica Neue',monospace;--sans:-apple-system,'Helvetica Neue',sans-serif;
+    --void:#060a0d;--void2:#0a1013;
+    --panel:rgba(15,23,27,.66);--panel-solid:#0d1518;--panel-hi:rgba(23,34,38,.82);
+    --line:rgba(84,255,197,.16);--line-strong:rgba(84,255,197,.34);
+    --accent:#20e8a4;--accent-dim:#159d70;--accent-glow:rgba(32,232,164,.35);
+    --amber:#ffb454;--amber-dim:#3a2c15;
+    --red:#ff5d76;--red-dim:#3a1620;
+    --text:#e8f6ef;--muted:#7fa89a;--muted2:#3d5852;
+    --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Sarabun',-apple-system,sans-serif;--disp:'Chakra Petch',-apple-system,sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --void:#eef4f1;--void2:#e4ece8;
+      --panel:rgba(255,255,255,.72);--panel-solid:#ffffff;--panel-hi:rgba(255,255,255,.9);
+      --line:rgba(11,120,86,.18);--line-strong:rgba(11,120,86,.4);
+      --accent:#0a9d6e;--accent-dim:#078554;--accent-glow:rgba(10,157,110,.25);
+      --amber:#a86a10;--amber-dim:#fbe7c8;
+      --red:#c62c48;--red-dim:#fbdce2;
+      --text:#0d1c17;--muted:#4c6e63;--muted2:#a9c2b9;
+    }
+  }
+  :root[data-theme="light"]{
+    --void:#eef4f1;--void2:#e4ece8;
+    --panel:rgba(255,255,255,.72);--panel-solid:#ffffff;--panel-hi:rgba(255,255,255,.9);
+    --line:rgba(11,120,86,.18);--line-strong:rgba(11,120,86,.4);
+    --accent:#0a9d6e;--accent-dim:#078554;--accent-glow:rgba(10,157,110,.25);
+    --amber:#a86a10;--amber-dim:#fbe7c8;
+    --red:#c62c48;--red-dim:#fbdce2;
+    --text:#0d1c17;--muted:#4c6e63;--muted2:#a9c2b9;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding-bottom:24px}
-  input,select,textarea,button{font-family:var(--sans);outline:none}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, var(--accent-glow) 0%, transparent 60%),
+      repeating-linear-gradient(0deg, transparent 0 23px, rgba(127,168,154,.05) 23px 24px),
+      var(--void);
+    color:var(--text);font-family:var(--sans);min-height:100vh;padding-bottom:24px}
+  input,select,textarea,button{font-family:var(--sans);outline:none;color:inherit}
   input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
-  #header{background:var(--primary);padding:14px 16px 0;position:sticky;top:0;z-index:100}
+  #header{
+    background:linear-gradient(180deg,var(--void2) 0%, transparent 100%);
+    padding:14px 16px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
   .header-top{display:flex;justify-content:space-between;align-items:center;margin:0 auto 12px;max-width:520px}
   .logo{display:flex;align-items:center;gap:10px}
-  .logo-icon{width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-  .logo-title{font-size:15px;font-weight:700;color:#fff}
-  .logo-sub{font-size:9px;color:rgba(255,255,255,.6);font-family:var(--mono);letter-spacing:1.5px}
+  .logo-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;
+    background:linear-gradient(135deg,var(--accent) 0%, var(--accent-dim) 100%);
+    box-shadow:0 0 18px var(--accent-glow), inset 0 0 0 1px rgba(255,255,255,.25)}
+  .logo-title{font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:.3px;color:var(--text)}
+  .logo-sub{font-size:9px;color:var(--accent);font-family:var(--mono);letter-spacing:1.5px;margin-top:1px}
   .clock-wrap{text-align:right;display:flex;align-items:center;gap:10px}
-  .clock-time{font-family:var(--mono);font-size:16px;font-weight:600;color:#fff;letter-spacing:1px;line-height:1}
-  .sync-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);display:inline-block;margin-right:4px}
-  .sync-dot.ok{background:#7AB88A}
-  .sync-dot.error{background:#E08080}
-  .gear-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;width:30px;height:30px;font-size:14px;cursor:pointer}
-  .pending-badge{font-size:10px;background:rgba(255,255,255,.2);color:#fff;border-radius:5px;padding:2px 6px;font-weight:600;margin-left:6px}
+  .clock-time{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--text);letter-spacing:1px;line-height:1;font-variant-numeric:tabular-nums}
+  .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--muted2);display:inline-block;margin-right:4px}
+  .sync-dot.ok{background:var(--accent);box-shadow:0 0 6px var(--accent);animation:pulse 2s infinite}
+  .sync-dot.error{background:var(--red);box-shadow:0 0 6px var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .gear-btn{background:var(--panel-hi);border:1px solid var(--line-strong);color:var(--accent);border-radius:9px;width:30px;height:30px;font-size:14px;cursor:pointer}
+  .pending-badge{font-size:9px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);border-radius:5px;padding:1px 6px;font-weight:600;margin-left:6px;font-family:var(--mono)}
 
   .tabs{display:flex;max-width:520px;margin:0 auto}
-  .tab-btn{flex:1;border:none;background:none;cursor:pointer;padding:12px 0;font-size:12px;color:rgba(255,255,255,.5);border-bottom:2px solid transparent;font-family:var(--sans);font-weight:600}
-  .tab-btn.active{color:#fff;border-bottom-color:#fff}
+  .tab-btn{flex:1;border:none;background:none;cursor:pointer;padding:11px 0 12px;font-size:12.5px;color:var(--muted);border-bottom:2px solid transparent;font-family:var(--disp);font-weight:600;letter-spacing:.3px}
+  .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);text-shadow:0 0 10px var(--accent-glow)}
 
   .content{max-width:520px;margin:0 auto;padding:14px}
   .tab-panel{display:none;flex-direction:column;gap:10px}
   .tab-panel.active{display:flex}
 
-  .card{background:var(--surface);border-radius:14px;padding:14px;border:1px solid var(--border)}
-  .card-title{font-size:11px;font-weight:700;color:var(--primary);margin-bottom:10px;letter-spacing:.3px;text-transform:uppercase}
-  .banner{background:var(--plight);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--primary);font-weight:600}
+  .card{background:var(--panel);backdrop-filter:blur(12px);border-radius:14px;padding:14px;border:1px solid var(--line);
+    box-shadow:0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02)}
+  .card-title{font-family:var(--disp);font-size:11px;font-weight:600;color:var(--accent);margin-bottom:10px;letter-spacing:.6px;text-transform:uppercase}
+  .banner{background:var(--amber-dim);border:1px solid var(--amber);border-radius:11px;padding:10px 13px;font-size:12.5px;color:var(--amber);font-weight:600}
 
   .field-label{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600;display:block}
   input[type=date],input[type=number],input[type=text],input[type=password]{
-    width:100%;background:var(--surf2);color:var(--pdark);border:1.5px solid var(--border);border-radius:9px;
-    padding:10px 12px;font-size:14px;font-family:var(--mono);font-weight:600}
-  input:focus{border-color:var(--primary)}
-  select{width:100%;background:var(--surf2);color:var(--pdark);border:1.5px solid var(--border);border-radius:10px;
-    padding:11px 34px 11px 12px;font-size:14px;font-family:var(--mono);font-weight:600;appearance:none;cursor:pointer;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232C4E38' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 12px center}
+    width:100%;background:var(--void2);color:var(--text);border:1.5px solid var(--line);border-radius:9px;
+    padding:10px 12px;font-size:14px;font-family:var(--mono);font-weight:600;transition:border-color .15s, box-shadow .15s}
+  input::placeholder{color:var(--muted2);font-weight:500}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+  select{width:100%;background:var(--void2);color:var(--text);border:1.5px solid var(--line);border-radius:10px;
+    padding:11px 34px 11px 12px;font-size:13.5px;font-family:var(--sans);font-weight:600;appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2320e8a4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;transition:border-color .15s}
+  select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
 
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 
-  .btn{border:none;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:var(--sans)}
-  .btn-primary{background:var(--primary);color:#fff}
-  .btn-outline{background:var(--surf2);color:var(--primary);border:1.5px solid var(--primary)}
+  .btn{border:none;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:var(--disp);letter-spacing:.3px}
+  .btn-primary{background:linear-gradient(135deg,var(--accent) 0%, var(--accent-dim) 100%);color:var(--void);
+    box-shadow:0 0 20px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.3)}
+  .btn-outline{background:transparent;color:var(--accent);border:1.5px solid var(--accent-dim)}
   .btn-danger{background:none;color:var(--red);border:none;font-size:16px;padding:2px 6px}
-  .btn:active{opacity:.7}
+  .btn:active{opacity:.8;transform:scale(.98)}
 
-  .empty-hint{font-size:12px;color:var(--muted2);text-align:center;padding:14px 0}
+  .empty-hint{font-size:12px;color:var(--muted2);text-align:center;padding:14px 0;font-family:var(--mono)}
 
   .rows{display:flex;flex-direction:column;gap:8px}
-  .row-item{background:var(--surf2);border-radius:10px;padding:10px 11px;border:1px solid var(--border)}
+  .row-item{background:var(--void2);border-radius:11px;padding:10px 11px;border:1px solid var(--line)}
   .row-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-  .row-title{font-size:13px;font-weight:700;color:var(--pdark)}
+  .row-title{font-size:13px;font-weight:700;color:var(--text);font-family:var(--disp)}
   .row-sub{font-size:11px;color:var(--muted);margin-top:1px}
-  .row-remove{background:none;border:none;color:var(--red);font-size:15px;cursor:pointer;padding:0 2px;line-height:1}
+  .row-actions{display:flex;gap:2px;flex-shrink:0}
+  .row-edit,.row-remove{background:none;border:none;font-size:14px;cursor:pointer;padding:3px 5px;line-height:1;border-radius:6px}
+  .row-edit{color:var(--accent)}
+  .row-remove{color:var(--red)}
+  .row-editform{display:flex;flex-direction:column;gap:8px}
+  .row-editform select,.row-editform input[type=text],.row-editform input[type=number]{padding:8px 10px;font-size:12.5px}
+  .row-editform .grid-2{gap:8px}
+  .row-done-btn{background:var(--accent-glow);color:var(--accent);border:1px solid var(--accent-dim);border-radius:8px;font-family:var(--disp);font-size:11px;font-weight:700;padding:8px;cursor:pointer;letter-spacing:.3px;width:100%}
   .row-bottom{display:flex;align-items:flex-end;gap:8px}
   .hrs-field{flex:1}
-  .hrs-field label{font-size:9.5px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px}
+  .hrs-field label{font-size:9.5px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px}
   .hrs-field input{padding:7px 9px;font-size:13px}
-  .status-pill{font-size:10px;font-weight:700;padding:5px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.2px}
-  .status-pending{background:#F3E9D8;color:var(--amber)}
-  .status-done{background:var(--plight);color:var(--primary)}
-  .totals{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding-top:10px;margin-top:8px;border-top:1px dashed var(--border)}
-  .totals b{color:var(--pdark);font-family:var(--mono)}
+  .status-pill{font-size:9.5px;font-weight:700;padding:5px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.2px;font-family:var(--mono)}
+  .status-pending{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber)}
+  .status-done{background:var(--accent-glow);color:var(--accent);border:1px solid var(--accent-dim)}
+  .totals{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding-top:10px;margin-top:8px;border-top:1px dashed var(--line-strong)}
+  .totals b{color:var(--accent);font-family:var(--mono);font-size:14px;text-shadow:0 0 8px var(--accent-glow)}
 
-  .day-row{display:flex;justify-content:space-between;align-items:center;padding:11px 4px;border-bottom:1px solid var(--surf2);cursor:pointer}
-  .day-row:active{background:var(--plight)}
-  .day-date{font-family:var(--mono);font-weight:700;color:var(--pdark);font-size:13px}
+  .day-row{display:flex;justify-content:space-between;align-items:center;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+  .day-row:active{background:var(--accent-glow)}
+  .day-date{font-family:var(--mono);font-weight:700;color:var(--text);font-size:13px}
   .day-meta{font-size:11px;color:var(--muted)}
-  .day-total{font-family:var(--mono);font-weight:700;color:var(--primary)}
+  .day-total{font-family:var(--mono);font-weight:700;color:var(--accent)}
 
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+  .modal-overlay{position:fixed;inset:0;background:rgba(3,6,7,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
   .modal-overlay.show{display:flex}
-  .modal-box{background:var(--surface);border-radius:14px;padding:18px;width:100%;max-width:320px}
-  .modal-title{font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px}
+  .modal-box{background:var(--panel-solid);border-radius:16px;padding:18px;width:100%;max-width:320px;border:1px solid var(--line-strong);box-shadow:0 0 40px rgba(0,0,0,.6),0 0 24px var(--accent-glow)}
+  .modal-title{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:12px;font-family:var(--disp);text-align:center}
 
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--pdark);color:#fff;
-    padding:10px 18px;border-radius:20px;font-size:12px;z-index:300;opacity:0;transition:opacity .25s;max-width:90%;text-align:center}
-  .toast.show{opacity:1}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel-solid);color:var(--accent);
+    border:1px solid var(--accent-dim);padding:10px 18px;border-radius:20px;font-size:12px;z-index:300;opacity:0;
+    transition:opacity .25s, transform .25s;max-width:90%;text-align:center;font-family:var(--mono);box-shadow:0 0 24px var(--accent-glow)}
+  .toast.show{opacity:1;transform:translate(-50%,-4px)}
 
   .setup-box{max-width:520px;margin:40px auto;padding:0 16px}
 </style>
@@ -120,7 +168,7 @@
   <div id="header">
     <div class="header-top">
       <div class="logo">
-        <div class="logo-icon">👷</div>
+        <div class="logo-icon">⚡</div>
         <div>
           <div class="logo-title">Labor Daily Report</div>
           <div class="logo-sub">MEGA FARM CAMBODIA</div>
@@ -226,8 +274,10 @@ const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyblJjuRw-rz
 let SCRIPT_URL = localStorage.getItem('labor_webapp_url') || DEFAULT_SCRIPT_URL;
 let currentRows = [];      // rows staged for the selected date, before/after save
 let currentMode = 'NEW';   // NEW | UPDATE (มี batch อยู่แล้วสำหรับวันนี้)
+let editingIndex = -1;     // index ของรายการที่กำลังเปิดฟอร์มแก้ไขรายละเอียดอยู่ (-1 = ไม่มี)
 let pinCallback = null;
 const PENDING_KEY = 'labor_pending';
+let PLOTS_LIST = [], CONTRACTORS_LIST = [], ACTIVITIES_LIST = [];
 
 // ══════════════════════════════════════════════════════════════
 // BOOT
@@ -305,9 +355,12 @@ async function loadDropdowns() {
     const [plotsRes, contrRes, actRes] = await Promise.all([
       apiGet('getPlots'), apiGet('getContractors'), apiGet('getActivities')
     ]);
-    fillSelect('fPlot', plotsRes.plots || [], '-- เลือกแปลง --');
-    fillSelect('fContractor', contrRes.contractors || [], '-- เลือกผู้รับเหมา --');
-    fillSelect('fActivity', actRes.activities || [], '-- เลือกกิจกรรม --');
+    PLOTS_LIST = plotsRes.plots || [];
+    CONTRACTORS_LIST = contrRes.contractors || [];
+    ACTIVITIES_LIST = actRes.activities || [];
+    fillSelect('fPlot', PLOTS_LIST, '-- เลือกแปลง --');
+    fillSelect('fContractor', CONTRACTORS_LIST, '-- เลือกผู้รับเหมา --');
+    fillSelect('fActivity', ACTIVITIES_LIST, '-- เลือกกิจกรรม --');
   } catch (e) {
     showToast('โหลดรายชื่อแปลง/ผู้รับเหมา/กิจกรรมไม่สำเร็จ (ออฟไลน์?)');
   }
@@ -319,6 +372,11 @@ function fillSelect(id, values, placeholder) {
     values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
 }
 
+function optionsHtml(values, current, placeholder) {
+  return `<option value="">${placeholder}</option>` +
+    values.map(v => `<option value="${escapeHtml(v)}" ${v === current ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('');
+}
+
 // ══════════════════════════════════════════════════════════════
 // DATE CHANGE → โหลด batch เดิมของวันนั้น (ถ้ามี) เพื่อแก้ไข
 // ══════════════════════════════════════════════════════════════
@@ -327,6 +385,7 @@ async function onDateChange() {
   if (!date) return;
   currentRows = [];
   currentMode = 'NEW';
+  editingIndex = -1;
   renderRows();
   updateModeBanner();
   try {
@@ -379,7 +438,26 @@ function addRow() {
 
 function removeRow(idx) {
   currentRows.splice(idx, 1);
+  if (editingIndex === idx) editingIndex = -1;
+  else if (editingIndex > idx) editingIndex--;
   renderRows();
+}
+
+function toggleEditRow(idx) {
+  editingIndex = (editingIndex === idx) ? -1 : idx;
+  renderRows();
+}
+
+function saveRowEdit(idx) {
+  const r = currentRows[idx];
+  r.activity = document.getElementById('editActivity-' + idx).value;
+  r.plot = document.getElementById('editPlot-' + idx).value;
+  r.contractor = document.getElementById('editContractor-' + idx).value;
+  r.numWorkers = parseFloat(document.getElementById('editWorkers-' + idx).value) || 0;
+  r.supervisor = document.getElementById('editSupervisor-' + idx).value.trim();
+  editingIndex = -1;
+  renderRows();
+  showToast('✅ แก้ไขรายละเอียดแล้ว');
 }
 
 function onHoursInput(idx, field, val) {
@@ -403,6 +481,22 @@ function renderRows() {
   const list = document.getElementById('rowsList');
   const hint = document.getElementById('emptyHint');
   list.innerHTML = currentRows.map((r, idx) => {
+    if (idx === editingIndex) {
+      return `<div class="row-item">
+        <div class="row-editform">
+          <div class="grid-2">
+            <select id="editActivity-${idx}">${optionsHtml(ACTIVITIES_LIST, r.activity, '-- กิจกรรม --')}</select>
+            <select id="editPlot-${idx}">${optionsHtml(PLOTS_LIST, r.plot, '-- แปลง --')}</select>
+          </div>
+          <div class="grid-2">
+            <select id="editContractor-${idx}">${optionsHtml(CONTRACTORS_LIST, r.contractor, '-- ผู้รับเหมา --')}</select>
+            <input type="number" id="editWorkers-${idx}" min="0" step="1" value="${r.numWorkers || ''}" placeholder="จำนวนคน">
+          </div>
+          <input type="text" id="editSupervisor-${idx}" value="${escapeHtml(r.supervisor || '')}" placeholder="ผู้ควบคุม">
+          <button class="row-done-btn" onclick="saveRowEdit(${idx})">✓ เสร็จ — บันทึกรายละเอียด</button>
+        </div>
+      </div>`;
+    }
     const pending = r.hours <= 0;
     return `<div class="row-item">
       <div class="row-top">
@@ -410,7 +504,10 @@ function renderRows() {
           <div class="row-title">${escapeHtml(r.plot)} — ${escapeHtml(r.activity)}</div>
           <div class="row-sub">${escapeHtml(r.contractor)} · ${r.numWorkers} คน${r.supervisor ? ' · คุม: ' + escapeHtml(r.supervisor) : ''}</div>
         </div>
-        <button class="row-remove" onclick="removeRow(${idx})">✕</button>
+        <div class="row-actions">
+          <button class="row-edit" onclick="toggleEditRow(${idx})" title="แก้ไขรายละเอียด">✏️</button>
+          <button class="row-remove" onclick="removeRow(${idx})" title="ลบรายการ">✕</button>
+        </div>
       </div>
       <div class="row-bottom">
         <div class="hrs-field">
@@ -493,7 +590,7 @@ async function loadHistory() {
     if (!days.length) { list.innerHTML = '<div class="empty-hint">ยังไม่มีข้อมูล</div>'; return; }
     list.innerHTML = days.map(d => `
       <div class="day-row" onclick="editDay('${d.date}')">
-        <div><div class="day-date">${d.date}</div><div class="day-meta">${d.count} รายการ · ${d.totalWorkers} คน${d.pending > 0 ? ` · <span style="color:var(--amber)">รอชั่วโมง ${d.pending}</span>` : ''}</div></div>
+        <div><div class="day-date">${d.date}</div><div class="day-meta">${d.count} รายการ · ${d.totalWorkers} คน${d.pending > 0 ? ` · <span style="color:var(--amber)">รอกรอก ${d.pending} รายการ</span>` : ''}</div></div>
         <div class="day-total">${d.totalHours} ชม.</div>
       </div>`).join('');
   } catch (e) {

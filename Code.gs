@@ -274,7 +274,7 @@ function findActiveBatchForDate(sh, isoDate) {
 
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
-    if (String(row[dateCol - 1]) === isoDate && row[statusCol - 1] === 'ACTIVE') {
+    if (normalizeDateCell(row[dateCol - 1]) === isoDate && row[statusCol - 1] === 'ACTIVE') {
       batchId = row[batchCol - 1];
     }
   }
@@ -286,6 +286,16 @@ function findActiveBatchForDate(sh, isoDate) {
     }
   }
   return { batchId, rowIndexes };
+}
+
+// แปลง cell ของ Date ให้เป็น "YYYY-MM-DD" ไม่ว่าจะเก็บเป็น text หรือ Date object
+// (Sheet บางครั้งตีความ string วันที่เป็น Date object เองแม้ตั้ง format เป็น Plain Text ไว้แล้ว —
+// นี่คือสาเหตุที่ทำให้ getBatch หาข้อมูลของวันนั้นไม่เจอหลังกดส่ง)
+function normalizeDateCell(cell) {
+  if (cell instanceof Date) {
+    return Utilities.formatDate(cell, TZ, 'yyyy-MM-dd');
+  }
+  return String(cell).trim();
 }
 
 function getBatchForDate(isoDate) {
@@ -341,12 +351,13 @@ function getRecentLog(limit) {
   const byDate = {};
   data.forEach(r => {
     const o = rowFullToObj(r);
+    const dateKey = normalizeDateCell(o.Date);
     if (o.Status !== 'ACTIVE') return;
-    if (!byDate[o.Date]) byDate[o.Date] = { date: o.Date, rows: [], totalHours: 0, totalWorkers: 0, pending: 0 };
-    byDate[o.Date].rows.push(o);
-    byDate[o.Date].totalHours += parseFloat(o.Hours) || 0;
-    byDate[o.Date].totalWorkers += parseFloat(o.NumWorkers) || 0;
-    if ((parseFloat(o.Hours) || 0) <= 0) byDate[o.Date].pending++;
+    if (!byDate[dateKey]) byDate[dateKey] = { date: dateKey, rows: [], totalHours: 0, totalWorkers: 0, pending: 0 };
+    byDate[dateKey].rows.push(o);
+    byDate[dateKey].totalHours += parseFloat(o.Hours) || 0;
+    byDate[dateKey].totalWorkers += parseFloat(o.NumWorkers) || 0;
+    if ((parseFloat(o.Hours) || 0) <= 0) byDate[dateKey].pending++;
   });
 
   const days = Object.values(byDate)
