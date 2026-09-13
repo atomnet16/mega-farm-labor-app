@@ -88,6 +88,8 @@
   .banner{background:var(--amber-dim);border:1px solid var(--amber);border-radius:11px;padding:10px 13px;font-size:12.5px;color:var(--amber);font-weight:600}
 
   .field-label{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600;display:block}
+  .hint-type{color:var(--muted2);font-weight:500;text-transform:none;letter-spacing:0}
+  input.combo-input{font-family:var(--sans)!important;font-weight:600}
   input[type=date],input[type=number],input[type=text],input[type=password]{
     width:100%;background:var(--void2);color:var(--text);border:1.5px solid var(--line);border-radius:9px;
     padding:10px 12px;font-size:14px;font-family:var(--mono);font-weight:600;transition:border-color .15s, box-shadow .15s}
@@ -205,12 +207,14 @@
         <div class="card-title">เพิ่มกิจกรรมเช้า (ไม่ต้องรู้ชั่วโมงตอนนี้)</div>
         <div class="grid-2" style="margin-bottom:10px">
           <div>
-            <label class="field-label">กิจกรรม</label>
-            <select id="fActivity"><option value="">-- เลือกกิจกรรม --</option></select>
+            <label class="field-label">กิจกรรม <span class="hint-type">(พิมพ์เพิ่มได้)</span></label>
+            <input type="text" class="combo-input" id="fActivity" list="fActivityList" placeholder="เลือกหรือพิมพ์กิจกรรม" autocomplete="off">
+            <datalist id="fActivityList"></datalist>
           </div>
           <div>
-            <label class="field-label">แปลง (Plot)</label>
-            <select id="fPlot"><option value="">-- เลือกแปลง --</option></select>
+            <label class="field-label">แปลง (Plot) <span class="hint-type">(พิมพ์เพิ่มได้)</span></label>
+            <input type="text" class="combo-input" id="fPlot" list="fPlotList" placeholder="เลือกหรือพิมพ์แปลง" autocomplete="off">
+            <datalist id="fPlotList"></datalist>
           </div>
         </div>
         <div class="grid-2" style="margin-bottom:10px">
@@ -358,9 +362,9 @@ async function loadDropdowns() {
     PLOTS_LIST = plotsRes.plots || [];
     CONTRACTORS_LIST = contrRes.contractors || [];
     ACTIVITIES_LIST = actRes.activities || [];
-    fillSelect('fPlot', PLOTS_LIST, '-- เลือกแปลง --');
+    fillDatalist('fPlotList', PLOTS_LIST);
     fillSelect('fContractor', CONTRACTORS_LIST, '-- เลือกผู้รับเหมา --');
-    fillSelect('fActivity', ACTIVITIES_LIST, '-- เลือกกิจกรรม --');
+    fillDatalist('fActivityList', ACTIVITIES_LIST);
   } catch (e) {
     showToast('โหลดรายชื่อแปลง/ผู้รับเหมา/กิจกรรมไม่สำเร็จ (ออฟไลน์?)');
   }
@@ -375,6 +379,14 @@ function fillSelect(id, values, placeholder) {
 function optionsHtml(values, current, placeholder) {
   return `<option value="">${placeholder}</option>` +
     values.map(v => `<option value="${escapeHtml(v)}" ${v === current ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('');
+}
+
+function fillDatalist(id, values) {
+  document.getElementById(id).innerHTML = values.map(v => `<option value="${escapeHtml(v)}">`).join('');
+}
+
+function datalistOptions(values) {
+  return values.map(v => `<option value="${escapeHtml(v)}">`).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -416,14 +428,15 @@ function updateModeBanner() {
 // ADD ROW
 // ══════════════════════════════════════════════════════════════
 function addRow() {
-  const activity = document.getElementById('fActivity').value;
-  const plot = document.getElementById('fPlot').value;
+  const activity = document.getElementById('fActivity').value.trim();
+  const plot = document.getElementById('fPlot').value.trim();
   const contractor = document.getElementById('fContractor').value;
   const numWorkers = parseFloat(document.getElementById('fWorkers').value) || 0;
   const supervisor = document.getElementById('fSupervisor').value.trim();
 
-  if (!activity) return showToast('กรุณาเลือกกิจกรรม');
-  if (!plot || !contractor) return showToast('กรุณาเลือกแปลงและผู้รับเหมา');
+  if (!activity) return showToast('กรุณาระบุกิจกรรม');
+  if (!plot) return showToast('กรุณาระบุแปลง');
+  if (!contractor) return showToast('กรุณาเลือกผู้รับเหมา');
   if (numWorkers <= 0) return showToast('กรุณากรอกจำนวนคนงาน');
 
   currentRows.push({ activity, plot, contractor, numWorkers, supervisor, hours: 0, otHours: 0 });
@@ -449,9 +462,14 @@ function toggleEditRow(idx) {
 }
 
 function saveRowEdit(idx) {
+  const activity = document.getElementById('editActivity-' + idx).value.trim();
+  const plot = document.getElementById('editPlot-' + idx).value.trim();
+  if (!activity) return showToast('กรุณาระบุกิจกรรม');
+  if (!plot) return showToast('กรุณาระบุแปลง');
+
   const r = currentRows[idx];
-  r.activity = document.getElementById('editActivity-' + idx).value;
-  r.plot = document.getElementById('editPlot-' + idx).value;
+  r.activity = activity;
+  r.plot = plot;
   r.contractor = document.getElementById('editContractor-' + idx).value;
   r.numWorkers = parseFloat(document.getElementById('editWorkers-' + idx).value) || 0;
   r.supervisor = document.getElementById('editSupervisor-' + idx).value.trim();
@@ -485,8 +503,10 @@ function renderRows() {
       return `<div class="row-item">
         <div class="row-editform">
           <div class="grid-2">
-            <select id="editActivity-${idx}">${optionsHtml(ACTIVITIES_LIST, r.activity, '-- กิจกรรม --')}</select>
-            <select id="editPlot-${idx}">${optionsHtml(PLOTS_LIST, r.plot, '-- แปลง --')}</select>
+            <input type="text" class="combo-input" id="editActivity-${idx}" list="editActivityList-${idx}" value="${escapeHtml(r.activity)}" placeholder="กิจกรรม" autocomplete="off">
+            <input type="text" class="combo-input" id="editPlot-${idx}" list="editPlotList-${idx}" value="${escapeHtml(r.plot)}" placeholder="แปลง" autocomplete="off">
+            <datalist id="editActivityList-${idx}">${datalistOptions(ACTIVITIES_LIST)}</datalist>
+            <datalist id="editPlotList-${idx}">${datalistOptions(PLOTS_LIST)}</datalist>
           </div>
           <div class="grid-2">
             <select id="editContractor-${idx}">${optionsHtml(CONTRACTORS_LIST, r.contractor, '-- ผู้รับเหมา --')}</select>
