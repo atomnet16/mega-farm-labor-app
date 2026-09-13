@@ -389,19 +389,46 @@ function sendLineSummary(isoDate, rows, mode) {
   const dateLabel = `${parseInt(d)}/${parseInt(m)}/${y}`;
   const headEmoji = mode === 'UPDATE' ? '🔄 ปรับปรุงข้อมูลคนงาน' : '🆕 รายงานคนงานรายวัน';
 
-  let lines = '';
-  let totalWorkers = 0, totalHours = 0, totalOt = 0;
+  // บรรทัดต่อแปลง+กิจกรรม (รวมจำนวนคนของผู้รับเหมาหลายรายที่ทำงานเดียวกันแบบ 9+4=13)
+  // ตามด้วยสรุปรวมคนต่อผู้รับเหมา — รายละเอียดชั่วโมง/OT ดูใน Sheet เท่านั้น
+  const groups = {};
+  const groupOrder = [];
+  const workersByContractor = {};
+  const contractorOrder = [];
+  let totalWorkers = 0;
+
   rows.forEach(r => {
+    const gKey = r.plot + '|' + r.activity;
+    if (!groups[gKey]) {
+      groups[gKey] = { plot: r.plot, activity: r.activity, parts: [], supervisors: [] };
+      groupOrder.push(gKey);
+    }
+    groups[gKey].parts.push({ contractor: r.contractor || 'ไม่ระบุผู้รับเหมา', numWorkers: r.numWorkers });
+    if (r.supervisor && groups[gKey].supervisors.indexOf(r.supervisor) === -1) {
+      groups[gKey].supervisors.push(r.supervisor);
+    }
+
+    const cName = r.contractor || 'ไม่ระบุผู้รับเหมา';
+    if (!(cName in workersByContractor)) { workersByContractor[cName] = 0; contractorOrder.push(cName); }
+    workersByContractor[cName] += r.numWorkers;
     totalWorkers += r.numWorkers;
-    totalHours += r.hours;
-    totalOt += r.otHours;
-    const hoursPart = r.hours > 0 ? `${r.hours}ชม.${r.otHours > 0 ? ` (+OT ${r.otHours}ชม.)` : ''}` : '⏳ รอกรอกชั่วโมง';
-    lines += `📍 ${r.plot} — ${r.activity} — ${r.contractor}\n` +
-             `   คน ${r.numWorkers} | ${hoursPart} | คุม: ${r.supervisor || '-'}\n`;
   });
 
-  const msg = `${headEmoji}\n📅 ${dateLabel}\n\n${lines}\n` +
-              `👥 รวมคนงาน: ${totalWorkers} คน\n⏱ รวมชั่วโมง: ${totalHours} ชม. (OT ${totalOt})`;
+  const plotLines = groupOrder.map(key => {
+    const g = groups[key];
+    const sum = g.parts.reduce((a, p) => a + p.numWorkers, 0);
+    const multiContractor = new Set(g.parts.map(p => p.contractor)).size > 1;
+    const countLabel = g.parts.length > 1
+      ? `${g.parts.map(p => multiContractor ? `${p.numWorkers}(${p.contractor})` : `${p.numWorkers}`).join('+')}=${sum}`
+      : `${sum}`;
+    const supLabel = g.supervisors.length ? g.supervisors.join('/') : '-';
+    return `📍 ${g.plot} — ${g.activity} — ${countLabel} คน — ผู้ควบคุม: ${supLabel}`;
+  }).join('\n');
+
+  const contractorLines = contractorOrder.map(name => `👷 ${name} — ${workersByContractor[name]} คน`).join('\n');
+
+  const msg = `${headEmoji}\n📅 ${dateLabel}\n\n${plotLines}\n\n${contractorLines}\n\n` +
+              `👥 รวมคนงาน: ${totalWorkers} คน`;
 
   try {
     UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', {
